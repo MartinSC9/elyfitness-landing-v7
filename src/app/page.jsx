@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   X, Menu, ArrowRight, ChevronDown, ChevronLeft, ChevronRight,
   MessageCircle, Star, Check, Send, Copy, ExternalLink,
   Instagram, Heart, Sparkles, TrendingUp, Users, Download, Crown, Dumbbell, Apple,
-  Shield, Award, Play, Mail, MapPin, Utensils, Video,
+  Shield, Award, Play, Mail, MapPin, Utensils, Video, CalendarCheck,
   Clipboard, CheckCircle, Target, Flame,
 } from 'lucide-react';
 import NumberTicker from '@/components/NumberTicker';
@@ -232,6 +233,14 @@ function Plans() {
           ))}
         </motion.div>
 
+        {/* Videollamada CTA */}
+        <div className="text-center mb-8">
+          <a href="https://calendar.app.google/LINK-VIDEOLLAMADA" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all shadow-md shadow-primary/20">
+            <CalendarCheck size={15} /> Agendar videollamada gratuita <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+          </a>
+          <p className="text-dark/25 text-[10px] mt-2">Consulta sin compromiso para elegir tu plan</p>
+        </div>
+
         <div className="flex flex-wrap justify-center gap-2">
           {['Sin permanencia', 'Chat VIP diario', 'Adaptado a patologias', 'Todo en APP'].map(f => (
             <span key={f} className="inline-flex items-center gap-1.5 bg-white border border-dark/8 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-dark/45">
@@ -307,8 +316,8 @@ function AppSection() {
                 <MagneticButton href="https://www.bejao.fit/checkout?tribeId=381&typeProduct=DIT" target="_blank" className="inline-flex items-center justify-center gap-2 bg-white text-dark px-8 py-3.5 rounded-full font-bold text-sm uppercase hover:bg-cream hover:shadow-lg transition-all group">
                   EMPIEZA YA <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </MagneticButton>
-                <a href="#contacto" className="inline-flex items-center gap-2 border border-white/15 text-white/50 hover:text-white hover:border-white/30 px-6 py-3.5 rounded-full font-bold text-xs uppercase transition-all">
-                  Tengo dudas
+                <a href="https://calendar.app.google/LINK-VIDEOLLAMADA" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/15 text-white/50 hover:text-white hover:border-white/30 px-6 py-3.5 rounded-full font-bold text-xs uppercase transition-all">
+                  <CalendarCheck size={13} /> Tengo dudas
                 </a>
               </div>
             </div>
@@ -470,6 +479,13 @@ function Transformations() {
           ))}
         </div>
       </div>
+
+      {/* Ver todos */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-8 text-center">
+        <Link to="/cambios" className="group inline-flex items-center gap-2 bg-dark hover:bg-dark-soft text-white px-7 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all shadow-sm">
+          Ver todos los cambios <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
     </section>
   );
 }
@@ -617,6 +633,14 @@ function Contact() {
           <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black uppercase text-white mb-2">Empieza tu <span className="text-gradient">cambio</span></motion.h2>
           <motion.p variants={fadeUp} className="text-white/40 text-sm mb-6">Elegi tu plan y escribime. Respondo en menos de 24h.</motion.p>
 
+          {/* Agendar videollamada - solo coaching 1a1 */}
+          <motion.div variants={fadeUp} className="mb-6">
+            <a href="https://calendar.app.google/LINK-VIDEOLLAMADA" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary-dark text-white px-6 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40">
+              <CalendarCheck size={16} /> Agendar videollamada gratuita <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+            </a>
+            <p className="text-white/25 text-[10px] mt-2">Exclusivo para consultas de Coaching 1 a 1</p>
+          </motion.div>
+
           <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-2 mb-8">
             <a href="mailto:contacta@elyfitness.es" className="inline-flex items-center gap-2 bg-white/10 border border-white/15 hover:bg-white/20 text-white px-4 py-2 rounded-full text-sm font-bold transition-all">
               <Mail size={14} /> contacta@elyfitness.es
@@ -751,6 +775,7 @@ function Footer() {
 function ChatWidget() {
   const [open, setOpen] = useState(false);
   const options = [
+    { label: 'Videollamada Coaching 1a1', href: 'https://calendar.app.google/LINK-VIDEOLLAMADA', external: true, icon: <CalendarCheck size={12} /> },
     { label: 'Quiero contratar un plan', href: '#contacto', icon: <Sparkles size={12} /> },
     { label: 'Ver planes y precios', href: '#planes', icon: <Crown size={12} /> },
     { label: 'Enviar email', href: 'mailto:contacta@elyfitness.es', external: true, icon: <Mail size={12} /> },
@@ -786,49 +811,78 @@ function ChatWidget() {
   );
 }
 
-/* =================== NEWSLETTER MODAL (V6 - delayed popup) =================== */
+/* =================== NEWSLETTER MODAL (V6 - with Ely photo from V4) =================== */
 function NewsletterModal() {
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const [done, setDone] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
     if (dismissed) return;
-    const t = setTimeout(() => setShow(true), 15000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setShow(true), 15000);
+    return () => clearTimeout(timer);
   }, [dismissed]);
 
   const close = () => { setShow(false); setDismissed(true); };
-  const submit = (e) => { e.preventDefault(); setDone(true); setTimeout(close, 2500); };
-
-  if (!show) return null;
+  const handleSubscribe = (e) => { e.preventDefault(); setSubscribed(true); setTimeout(close, 3000); };
 
   return (
     <AnimatePresence>
       {show && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-dark/40 backdrop-blur-sm z-50" onClick={close} />
-          <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ type: 'spring', damping: 25 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-cream rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto relative p-7 sm:p-8">
-              <button onClick={close} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow flex items-center justify-center hover:bg-dark/5"><X size={14} /></button>
-
-              {done ? (
-                <div className="text-center py-4">
-                  <CheckCircle size={36} className="text-[#34d399] mx-auto mb-3" />
-                  <h3 className="text-lg font-black">Bienvenid@!</h3>
-                  <p className="text-sm text-dark/40">Revisa tu email.</p>
-                </div>
-              ) : (
-                <>
-                  <h3 className="text-xl sm:text-2xl font-black leading-tight mb-2">Consejos gratis de nutricion y entreno</h3>
-                  <p className="text-sm text-dark/40 mb-5">Apuntate a mi newsletter semanal. Sin spam.</p>
-                  <form onSubmit={submit} className="space-y-2.5">
-                    <input type="text" placeholder="Tu nombre" required className="w-full bg-white border border-dark/8 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary/25" />
-                    <input type="email" placeholder="Tu email" required className="w-full bg-white border border-dark/8 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary/25" />
-                    <button type="submit" className="w-full bg-dark hover:bg-dark-soft text-white py-3 rounded-lg font-bold text-sm uppercase transition-all">Suscribirme</button>
-                  </form>
-                </>
-              )}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-dark/50 backdrop-blur-sm z-50" onClick={close} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          >
+            <div className="bg-cream rounded-2xl overflow-hidden shadow-2xl max-w-2xl w-full grid sm:grid-cols-2 pointer-events-auto relative">
+              <button onClick={close} className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-dark/5 transition-colors"><X size={16} /></button>
+              <div className="p-8 sm:p-10 flex flex-col justify-center">
+                <AnimatePresence mode="wait">
+                  {subscribed ? (
+                    <motion.div key="thanks" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-6">
+                      <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+                        <Check size={28} className="text-green-500" />
+                      </div>
+                      <h3 className="text-xl font-black mb-2 text-dark">Bienvenid@!</h3>
+                      <p className="text-sm text-dark/45">Revisa tu email para confirmar la suscripcion.</p>
+                    </motion.div>
+                  ) : (
+                    <motion.div key="form">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Sparkles size={14} className="text-primary" />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary-dark">Exclusivo</span>
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-black leading-tight mb-4 text-dark">
+                        Recupera tu energia, salud y bienestar
+                      </h3>
+                      <p className="text-sm text-dark/45 mb-6 leading-relaxed">
+                        Apuntate a mi newsletter y recibe consejos reales y practicos sobre alimentacion, entrenamiento y autocuidado.
+                      </p>
+                      <form onSubmit={handleSubscribe} className="space-y-3">
+                        <input type="text" placeholder="Tu nombre" required className="w-full bg-white border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/30 placeholder:text-dark/35" />
+                        <input type="email" placeholder="Tu email" required className="w-full bg-white border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/30 placeholder:text-dark/35" />
+                        <button type="submit" className="w-full bg-dark hover:bg-dark-soft text-white py-3.5 rounded-xl font-bold text-sm uppercase transition-all flex items-center justify-center gap-2">
+                          <Send size={13} /> SUSCRIBIRME
+                        </button>
+                      </form>
+                      <p className="text-[10px] text-dark/20 mt-4 flex items-start gap-1.5">
+                        <Shield size={10} className="text-primary shrink-0 mt-0.5" />
+                        Sin spam. Puedes darte de baja cuando quieras.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="hidden sm:block relative">
+                <img src={ELY_MODAL} alt="Ely Fitness" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark/30 via-transparent to-transparent" />
+              </div>
             </div>
           </motion.div>
         </>
