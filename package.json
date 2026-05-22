@@ -1,6 +1,6 @@
 {
-  "name": "elyfitness-landing",
-  "version": "1.0.0",
+  "name": "elyfitness-landing-v7",
+  "version": "7.0.0",
   "private": true,
   "scripts": {
     "dev": "vite",

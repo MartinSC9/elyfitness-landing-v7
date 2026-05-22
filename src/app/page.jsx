@@ -16,6 +16,25 @@ const ELY_VIDEO = 'https://video.wixstatic.com/video/4cd4b0_9626817c7320447ea40f
 const HERO_VIDEO_DESKTOP = '/hero-bg-1.mp4';
 const ELY_MODAL = 'https://static.wixstatic.com/media/4cd4b0_a7d6132da9c84d41a3bed4a1d5f77922~mv2.webp/v1/fill/w_800,h_1020,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/ELYFITNESS_MINIATURA_CAMPUS%20POWER%202025.webp';
 
+/* --- WIX API (Phase 1 integration) --- */
+const WIX_API_BASE = ''; // TODO: Set Wix API endpoint when ready
+async function submitToWix(endpoint, data) {
+  if (!WIX_API_BASE) {
+    console.log('[WIX] Not configured yet. Data:', data);
+    return { ok: false, reason: 'api_not_configured' };
+  }
+  try {
+    const res = await fetch(`${WIX_API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return { ok: res.ok };
+  } catch {
+    return { ok: false, reason: 'network_error' };
+  }
+}
+
 const IMG = {
   food2: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1400&q=85',
   gym1: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400&q=85',
@@ -91,10 +110,20 @@ function Navbar() {
 
 /* =================== HERO (V6 - video background from V4 manifesto style) =================== */
 function Hero() {
+  const videoRef = useRef(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.src = ELY_VIDEO;
+    video.addEventListener('canplay', () => setVideoLoaded(true), { once: true });
+  }, []);
+
   return (
     <section className="relative min-h-[90vh] sm:min-h-screen flex items-center overflow-hidden">
-      <div className="absolute inset-0">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover" src={ELY_VIDEO} />
+      <div className="absolute inset-0 bg-dark">
+        <video ref={videoRef} autoPlay muted loop playsInline className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`} />
       </div>
       <div className="absolute inset-0 bg-dark/65" />
       <div className="absolute inset-0 bg-gradient-to-b from-dark/30 via-transparent to-dark/40" />
@@ -178,11 +207,7 @@ function Plans() {
     <section id="planes" className="py-16 sm:py-20 bg-cream">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-12">
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 bg-primary/10 border border-primary/15 rounded-full px-4 py-1.5 mb-4">
-            <Crown size={12} className="text-primary-dark" />
-            <span className="text-[11px] font-bold text-primary-dark uppercase tracking-wider">Coaching 1 a 1 con Ely</span>
-          </motion.div>
-          <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black uppercase">Elige tu <span className="text-gradient">plan</span></motion.h2>
+          <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black uppercase">Coaching 1 a 1 <span className="text-gradient">con Ely</span></motion.h2>
           <motion.p variants={fadeUp} className="text-dark/40 text-sm mt-2 max-w-md mx-auto">Acompañamiento diario. Nutrición y entreno adaptado a ti. Sin permanencia.</motion.p>
           <motion.div variants={fadeUp} className="mt-4 inline-flex items-center gap-2 text-sm text-dark/45">
             <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse" />
@@ -190,7 +215,7 @@ function Plans() {
           </motion.div>
         </motion.div>
 
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-10">
           {planes.map(p => (
             <motion.a key={p.name} href="#contacto" variants={fadeUp} className={`group block bg-white rounded-2xl border p-5 hover:shadow-xl transition-all duration-400 relative ${p.popular ? 'border-primary/30 shadow-lg ring-1 ring-primary/10' : 'border-dark/8 hover:-translate-y-1'}`}>
               {p.popular && (
@@ -233,14 +258,6 @@ function Plans() {
           ))}
         </motion.div>
 
-        {/* Videollamada CTA */}
-        <div className="text-center mb-8">
-          <a href="https://calendar.app.google/LINK-VIDEOLLAMADA" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all shadow-md shadow-primary/20">
-            <CalendarCheck size={15} /> Agendar videollamada gratuita <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-          </a>
-          <p className="text-dark/25 text-[10px] mt-2">Consulta sin compromiso para elegir tu plan</p>
-        </div>
-
         <div className="flex flex-wrap justify-center gap-2">
           {['Sin permanencia', 'Chat VIP diario', 'Adaptado a patologías', 'Gestión en APP exclusiva'].map(f => (
             <span key={f} className="inline-flex items-center gap-1.5 bg-white border border-dark/8 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-dark/45">
@@ -248,10 +265,12 @@ function Plans() {
             </span>
           ))}
         </div>
+
       </div>
     </section>
   );
 }
+
 
 /* =================== APP SECTION (V6 - compact, pricing clear) =================== */
 function AppSection() {
@@ -266,23 +285,30 @@ function AppSection() {
   ];
 
   return (
-    <section id="app" className="py-16 sm:py-20 relative overflow-hidden">
-      <div className="absolute inset-0">
+    <section id="app" className="pt-12 sm:pt-14 pb-16 sm:pb-20 relative">
+      <div className="absolute inset-0 overflow-hidden">
         <img src={IMG.gym3} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-dark/88" />
+      </div>
+
+      {/* OR badge — sits exactly on the boundary */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+        <div className="relative flex items-center gap-3">
+          <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl scale-150" />
+          <div className="relative inline-flex items-center gap-2.5 bg-white border-2 border-primary/30 shadow-xl rounded-full px-5 py-3 sm:px-6 sm:py-3.5">
+            <span className="text-lg sm:text-xl font-black text-primary-dark">O</span>
+            <span className="text-xs sm:text-sm font-bold text-dark/50 uppercase tracking-wide whitespace-nowrap">elige la APP</span>
+            <ChevronDown size={14} className="text-primary animate-bounce" />
+          </div>
+        </div>
       </div>
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
         <div className="bg-dark/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
           <div className="grid lg:grid-cols-[1fr_auto] items-stretch">
             <div className="p-6 sm:p-8 lg:p-10">
-              <div className="inline-flex items-center gap-2 bg-white/8 border border-white/10 rounded-full px-3 py-1 mb-4">
-                <Download size={11} className="text-primary" />
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">ElyFitness APP</span>
-              </div>
-
-              <h2 className="text-2xl sm:text-3xl font-black uppercase text-white mb-1">Tu plan a tu ritmo</h2>
-              <p className="text-white/35 text-sm mb-6">Entrenos, recetas y comunidad. Pago único, sin permanencia.</p>
+              <h2 className="text-2xl sm:text-3xl font-black uppercase text-white mb-1">ElyFitness <span className="text-gradient">APP</span></h2>
+              <p className="text-white/35 text-sm mb-6">Tu plan a tu ritmo. Entrenos, recetas y comunidad. Pago único.</p>
 
               <div className="flex flex-wrap items-end gap-5 mb-6">
                 <div>
@@ -341,10 +367,11 @@ function AppSection() {
 function ComparisonTable() {
   const rows = [
     { label: 'Qué es', coaching: 'Coaching 1 a 1 con Ely', app: 'APP con plan de entreno y recetas' },
-    { label: 'Seguimiento', coaching: 'Chat diario + revisión quincenal', app: 'A tu ritmo, con guías en vídeo' },
-    { label: 'Personalización', coaching: '100% adaptado a ti', app: 'Planes profesionales estructurados' },
-    { label: 'Precio', coaching: 'Consultar precio', app: '59 EUR/año (4,92 EUR/mes)' },
-    { label: 'Ideal para', coaching: 'Resultados rápidos con acompañamiento', app: 'Entrenar a tu ritmo con guía profesional' },
+    { label: 'Incluye', coaching: 'Nutrición + entreno + suplementación personalizada', app: 'Entrenos en vídeo + recetas + comunidad + lista de la compra' },
+    { label: 'Seguimiento', coaching: 'Chat VIP diario + revisión quincenal', app: 'A tu ritmo, con guías en vídeo' },
+    { label: 'Personalización', coaching: '100% adaptado a ti (patologías, intolerancias)', app: 'Planes profesionales estructurados' },
+    { label: 'Precio', coaching: 'Consulta gratuita sin compromiso', app: '59 EUR/año (4,92 EUR/mes)' },
+    { label: 'Ideal para', coaching: 'Resultados rápidos con acompañamiento diario', app: 'Entrenar a tu ritmo con guía profesional' },
   ];
 
   return (
@@ -394,9 +421,10 @@ function ComparisonTable() {
           <div className="grid grid-cols-[1fr_1fr_1fr] border-t border-dark/8 bg-cream/50">
             <div className="p-3 sm:p-4" />
             <div className="p-3 sm:p-4 border-l border-dark/8 text-center">
-              <a href="#contacto" className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase transition-all">
-                Consultar <ArrowRight size={10} />
+              <a href="https://calendar.app.google/LINK-VIDEOLLAMADA" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase transition-all">
+                <CalendarCheck size={10} /> Videollamada gratis <ArrowRight size={10} />
               </a>
+              <p className="text-[8px] text-dark/25 mt-1">Solo Coaching 1a1</p>
             </div>
             <div className="p-3 sm:p-4 border-l border-dark/8 text-center">
               <a href="https://www.bejao.fit/checkout?tribeId=381&typeProduct=DIT" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-dark hover:bg-dark-soft text-white px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase transition-all">
@@ -578,7 +606,41 @@ function Prozis() {
   );
 }
 
-/* =================== FAQ (V6 - 5 essential questions) =================== */
+/* =================== ABOUT (V7 - mini bio for trust, not a full section) =================== */
+function About() {
+  return (
+    <section className="py-12 sm:py-14 bg-cream">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="bg-white rounded-2xl border border-dark/8 overflow-hidden shadow-sm">
+          <div className="grid sm:grid-cols-[auto_1fr] items-center gap-6 p-6 sm:p-8">
+            <motion.div variants={fadeUp} className="mx-auto sm:mx-0">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-3 border-primary/30 shadow-lg">
+                <img src={ELY_MODAL} alt="Ely Fitness" className="w-full h-full object-cover" />
+              </div>
+            </motion.div>
+            <motion.div variants={fadeUp} className="text-center sm:text-left">
+              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/15 rounded-full px-3 py-1 mb-3">
+                <Award size={11} className="text-primary-dark" />
+                <span className="text-[10px] font-bold text-primary-dark uppercase tracking-wider">Sobre Ely</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-dark mb-2">Dietista y Entrenadora Personal IFBB</h3>
+              <p className="text-sm text-dark/50 leading-relaxed mb-3">
+                +13 años ayudando a miles de personas a transformar su cuerpo y su salud de forma real y sostenible. Especializada en nutrición deportiva, patologías digestivas, SOP y acompañamiento personalizado.
+              </p>
+              <div className="flex flex-wrap justify-center sm:justify-start gap-3 text-xs text-dark/40">
+                <span className="inline-flex items-center gap-1"><CheckCircle size={12} className="text-primary" /> +4.000 cambios</span>
+                <span className="inline-flex items-center gap-1"><CheckCircle size={12} className="text-primary" /> +400K seguidores</span>
+                <span className="inline-flex items-center gap-1"><CheckCircle size={12} className="text-primary" /> Online desde España</span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* =================== FAQ (V7 - 5 essential questions) =================== */
 function FAQ() {
   const [open, setOpen] = useState(null);
   const faqs = [
@@ -620,7 +682,22 @@ function FAQ() {
 /* =================== CONTACT (V6 - prominent, form + direct links) =================== */
 function Contact() {
   const [sent, setSent] = useState(false);
-  const handleSubmit = (e) => { e.preventDefault(); setSent(true); setTimeout(() => setSent(false), 5000); };
+  const [sending, setSending] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSending(true);
+    const form = e.target;
+    const data = {
+      name: form.elements.name.value,
+      email: form.elements.email.value,
+      plan: form.elements.plan.value,
+      message: form.elements.message.value,
+    };
+    await submitToWix('/contact', data);
+    setSending(false);
+    setSent(true);
+    setTimeout(() => setSent(false), 5000);
+  };
 
   return (
     <section id="contacto" className="relative py-16 sm:py-20 overflow-hidden">
@@ -670,18 +747,18 @@ function Contact() {
                 ))}
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <motion.input variants={fadeUp} type="text" placeholder="Tu nombre" required className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full transition-all placeholder:text-dark/30" />
-                <motion.input variants={fadeUp} type="email" placeholder="Tu e-mail" required className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full transition-all placeholder:text-dark/30" />
+                <motion.input variants={fadeUp} name="name" type="text" placeholder="Tu nombre" required className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full transition-all placeholder:text-dark/30" />
+                <motion.input variants={fadeUp} name="email" type="email" placeholder="Tu e-mail" required className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full transition-all placeholder:text-dark/30" />
               </div>
-              <motion.select variants={fadeUp} className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm text-dark/50 focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full transition-all">
+              <motion.select variants={fadeUp} name="plan" className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm text-dark/50 focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full transition-all">
                 <option>¿Qué plan te interesa?</option>
                 <option>Premium Plus</option><option>Premium Running</option><option>Nutricion</option><option>Training</option>
                 <option>ElyFitness APP (59&#8364;/ano)</option><option>Pack Duo (69&#8364;/ano)</option><option>Otra consulta</option>
               </motion.select>
-              <motion.textarea variants={fadeUp} rows={3} placeholder="Cuéntame tu objetivo..." className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full resize-none transition-all placeholder:text-dark/30" />
+              <motion.textarea variants={fadeUp} name="message" rows={3} placeholder="Cuéntame tu objetivo..." className="bg-cream border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 w-full resize-none transition-all placeholder:text-dark/30" />
               <motion.div variants={fadeUp} className="text-center pt-1">
-                <button type="submit" className="group bg-primary hover:bg-primary-dark text-white px-10 py-3.5 rounded-full font-bold text-sm uppercase inline-flex items-center gap-2 transition-all shadow-lg shadow-primary/25">
-                  <Send size={13} /> Enviar mensaje
+                <button type="submit" disabled={sending} className="group bg-primary hover:bg-primary-dark text-white px-10 py-3.5 rounded-full font-bold text-sm uppercase inline-flex items-center gap-2 transition-all shadow-lg shadow-primary/25 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <Send size={13} /> {sending ? 'Enviando...' : 'Enviar mensaje'}
                 </button>
               </motion.div>
             </motion.form>
@@ -696,7 +773,7 @@ function Contact() {
 function Footer() {
   const [email, setEmail] = useState('');
   const [sub, setSub] = useState(false);
-  const handleSub = (e) => { e.preventDefault(); setSub(true); setEmail(''); setTimeout(() => setSub(false), 3000); };
+  const handleSub = async (e) => { e.preventDefault(); await submitToWix('/newsletter', { email }); setSub(true); setEmail(''); setTimeout(() => setSub(false), 3000); };
 
   return (
     <footer className="bg-dark text-white">
@@ -775,10 +852,10 @@ function Footer() {
 function ChatWidget() {
   const [open, setOpen] = useState(false);
   const options = [
-    { label: 'Videollamada Coaching 1a1', href: 'https://calendar.app.google/LINK-VIDEOLLAMADA', external: true, icon: <CalendarCheck size={12} /> },
-    { label: 'Quiero contratar un plan', href: '#contacto', icon: <Sparkles size={12} /> },
+    { label: 'Videollamada gratuita', desc: 'Solo Coaching 1a1', href: 'https://calendar.app.google/LINK-VIDEOLLAMADA', external: true, icon: <CalendarCheck size={12} /> },
     { label: 'Ver planes y precios', href: '#planes', icon: <Crown size={12} /> },
-    { label: 'Enviar email', href: 'mailto:contacta@elyfitness.es', external: true, icon: <Mail size={12} /> },
+    { label: 'Contactar por formulario', href: '#contacto', icon: <Send size={12} /> },
+    { label: 'Enviar email directo', href: 'mailto:contacta@elyfitness.es', external: true, icon: <Mail size={12} /> },
   ];
 
   return (
@@ -797,7 +874,10 @@ function ChatWidget() {
               {options.map(o => (
                 <a key={o.label} href={o.href} target={o.external ? '_blank' : undefined} rel={o.external ? 'noopener noreferrer' : undefined} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-cream hover:bg-primary/10 transition-colors">
                   <span className="text-primary">{o.icon}</span>
-                  <span className="text-sm font-medium text-dark/65">{o.label}</span>
+                  <div>
+                    <span className="text-sm font-medium text-dark/65 block">{o.label}</span>
+                    {o.desc && <span className="text-[9px] text-dark/30">{o.desc}</span>}
+                  </div>
                 </a>
               ))}
             </div>
@@ -824,7 +904,13 @@ function NewsletterModal() {
   }, [dismissed]);
 
   const close = () => { setShow(false); setDismissed(true); };
-  const handleSubscribe = (e) => { e.preventDefault(); setSubscribed(true); setTimeout(close, 3000); };
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    await submitToWix('/newsletter', { name: form.elements.nlname.value, email: form.elements.nlemail.value });
+    setSubscribed(true);
+    setTimeout(close, 3000);
+  };
 
   return (
     <AnimatePresence>
@@ -865,8 +951,8 @@ function NewsletterModal() {
                         Apúntate a mi newsletter y recibe consejos prácticos sobre alimentación, entrenamiento y autocuidado.
                       </p>
                       <form onSubmit={handleSubscribe} className="space-y-3">
-                        <input type="text" placeholder="Tu nombre" required className="w-full bg-white border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/30 placeholder:text-dark/35" />
-                        <input type="email" placeholder="Tu email" required className="w-full bg-white border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/30 placeholder:text-dark/35" />
+                        <input name="nlname" type="text" placeholder="Tu nombre" required className="w-full bg-white border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/30 placeholder:text-dark/35" />
+                        <input name="nlemail" type="email" placeholder="Tu email" required className="w-full bg-white border border-dark/8 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/30 placeholder:text-dark/35" />
                         <button type="submit" className="w-full bg-dark hover:bg-dark-soft text-white py-3.5 rounded-xl font-bold text-sm uppercase transition-all flex items-center justify-center gap-2">
                           <Send size={13} /> SUSCRIBIRME
                         </button>
@@ -891,7 +977,7 @@ function NewsletterModal() {
   );
 }
 
-/* =================== PAGE (V6 - optimized conversion flow) =================== */
+/* =================== PAGE (V7 - optimized conversion + trust + Wix integration) =================== */
 export default function Home() {
   return (
     <>
@@ -901,6 +987,7 @@ export default function Home() {
       <AppSection />
       <ComparisonTable />
       <Transformations />
+      <About />
       <Prozis />
       <FAQ />
       <Contact />

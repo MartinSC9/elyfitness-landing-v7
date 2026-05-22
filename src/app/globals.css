@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant xs (@media (min-width: 26rem));
+
 @theme {
   --color-primary: #D9A3FF;
   --color-primary-dark: #c084fc;
