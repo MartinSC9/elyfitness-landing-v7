@@ -848,7 +848,7 @@ function Footer() {
   );
 }
 
-/* =================== CHAT WIDGET (V6 - simple, no WhatsApp) =================== */
+/* =================== CHAT WIDGET (V7 - simple, streamlined options) =================== */
 function ChatWidget() {
   const [open, setOpen] = useState(false);
   const options = [
